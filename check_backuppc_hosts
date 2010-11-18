@@ -1,0 +1,106 @@
+#!/usr/bin/perl -w
+#
+# Nagios module to check backups from BackupPC software v0.2
+# Made by Pierre Mavro
+# Last Modified : 04/04/2009
+#
+# This Nagios module is under GPLv2 License
+#
+########################################################################
+#
+# Installation (nagios client side) :
+# - Copy the script in your nagios plugins directory (usualy /usr/lib/nagios/plugins)
+# - Set good rights (700 for nagios user)
+# - Add those two lines in your suoders file :
+#   - "Cmnd_Alias  GETSTATUS = /bin/su - backuppc -c /usr/share/backuppc/bin/BackupPC_serverMesg (or replace by your $bppccmd value bellow) 'status hosts'"
+#   - "nagios  ALL=NOPASSWD:GETSTATUS"
+#
+# Usage : check_backuppc_hosts [path_to_BackupPC_serverMesg]
+#         - path_to_BackupPC_serverMesg : if unset, default is /usr/share/backuppc/bin/BackupPC_serverMesg
+#
+########################################################################
+#
+# History :
+#
+# v0.2 :
+# + Added number of backuped hosts in status information column
+# + Added number of hosts errors in status information column
+# + Added an unknow host detection (from host backuppc file)
+# = Check hosts method optimized ((x hosts) * (time to check) faster)
+# = Improved security on sudoers command
+#
+# v0.1 :
+# + First version
+#
+########################################################################
+
+use strict;
+
+my @hosts_list;
+my @errors;
+my @formated_bppccmd;
+my $bppccmd='/usr/bin/BackupPC_serverMesg';
+
+# Get list of all backuped hosts
+sub format_input {
+    # Test $bppccmd execution
+    #die "Could not execute $bppccmd file : $!" unless (-x $bppccmd);
+    # Only bakcuppc user could check backup state
+    open (COMMANDBACKUPPC, "/tmp/backuppc_status") or die "Couldn't execute $bppccmd status hosts : $!";
+    while (<COMMANDBACKUPPC>) {
+        @formated_bppccmd = split /},/, $_;
+    }
+    close (COMMANDBACKUPPC);
+}
+
+# Check backup status for each hosts
+sub check_hosts_status {
+    &format_input;
+    foreach (@formated_bppccmd) {
+        chomp $_;
+        my $current_host;
+        # Add host to hosts_list
+        if (/"(\S+)" => {/) {
+            push @hosts_list, $1; 
+            $current_host=$1;
+
+            # Verify if any errors has occcured during backup
+            if (/"error" => "(.+?)"/i) {
+                push @errors, "$current_host : $1";
+            }
+        }
+    }
+}
+
+# Give result to Nagios
+sub feedback {
+    my $total_errors = @errors;
+    if ($total_errors ne 0) {
+        my $many='';
+        $many='s' if ($total_errors > '1');
+        my @formated_errors = join " - ", @errors;
+        print "[$total_errors problem"."$many"."] - @formated_errors\n";
+        exit(2);
+    } else {
+        my $total_hosts = @hosts_list;
+        if ($total_hosts == 0) {
+            print "Can't connect to server\n";
+            exit(2);
+        }
+        print "All ($total_hosts) servers have been correctly backuped\n";
+        exit(0);
+    }
+}
+
+# Check if first arg has been set
+$bppccmd=$ARGV[0] if (defined($ARGV[0]));
+
+# Check if 1 or less args has been set
+if (@ARGV <= 1) {
+    &check_hosts_status;
+    &feedback;
+} else {
+    print "Usage : check_backuppc_hosts [path_to_BackupPC_serverMesg]\n- path_to_BackupPC_serverMesg : if unset, default is /usr/bin/BackupPC_serverMesg\n\n";
+    exit(-1);
+}
+
