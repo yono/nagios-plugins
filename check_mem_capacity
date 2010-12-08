@@ -1,0 +1,19 @@
+#!/bin/sh
+# Nagios plugin: check_mem_capacity
+# This plugin checks output of /proc/meminfo
+# 
+# To use this plugin, please run below command.
+# head -n 1 /proc/meminfo > etc/hw.mem.original
+#
+# Author: Yusaku ONO
+
+head -n 1 /proc/meminfo > /etc/hw.mem.current
+result=`diff /etc/hw.mem.original /etc/hw.mem.current`
+if [ "$result" != "" ];
+then
+  echo "CRITICAL: **** Memory status is changed **** see /proc/meminfo"
+  exit 2
+else
+  echo "OK: Memory is OK"
+  exit 0
+fi
