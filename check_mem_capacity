@@ -6,6 +6,7 @@
 # head -n 1 /proc/meminfo > etc/hw.mem.original
 #
 # Author: Yusaku ONO
+# License: MIT
 
 head -n 1 /proc/meminfo > /etc/hw.mem.current
 result=`diff /etc/hw.mem.original /etc/hw.mem.current`
