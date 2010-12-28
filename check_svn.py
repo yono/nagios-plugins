@@ -298,8 +298,8 @@ class SvnTester:
         if self.password:
             cmd += " --password=%s" % self.password
 			
-		# for output result
-		cmd += " -v"
+            # for output result
+            cmd += " -v"
 
         result, output = self.run(cmd)
         
