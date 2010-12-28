@@ -23,7 +23,6 @@
 """
 Original URL: http://exchange.nagios.org/directory/Plugins/Others/Check_Svn/details
 
-SLES 11 SP 1 で動作しなかったので、一部修正
 """
 
 # Standard Nagios return codes
