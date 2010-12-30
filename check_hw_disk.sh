@@ -52,6 +52,8 @@ case "$1" in
 		exit 0
 		;;
 	*)
+		/usr/sbin/hwinfo --disk > /etc/hw.disk.current
+		diff /etc/hw.disk.original /etc/hw.disk.current > /tmp/hw.disk.check
 		if `du /tmp/hw.disk.check | cut -c 1|grep "^[0]" > /dev/null` ; then
 			echo No disk is changed
                         exit 0

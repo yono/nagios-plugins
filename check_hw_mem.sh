@@ -52,6 +52,8 @@ case "$1" in
 		exit 0
 		;;
 	*)
+		/usr/sbin/hwinfo --memory > /etc/hw.mem.current
+		diff /etc/hw.mem.original /etc/hw.mem.current > /tmp/hw.mem.check
 		if `du /tmp/hw.mem.check | cut -c 1|grep "^[0]" > /dev/null` ; then
 			echo No memory is changed
                         exit 0

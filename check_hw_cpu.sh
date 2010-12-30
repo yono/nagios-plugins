@@ -52,6 +52,8 @@ case "$1" in
 		exit 0
 		;;
 	*)
+		/usr/sbin/hwinfo --cpu > /etc/hw.cpu.current
+		diff /etc/hw.cpu.original /etc/hw.cpu.current > /tmp/hw.cpu.check
 		if `du /tmp/hw.cpu.check | cut -c 1|grep "^[0]" > /dev/null` ; then
 			echo No cpu is changed
                         exit 0
